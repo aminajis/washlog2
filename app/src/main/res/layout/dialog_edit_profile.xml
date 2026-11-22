@@ -1,0 +1,355 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_dialog_white"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <!-- Header: Ikon Outlet + Judul + Tombol Tutup -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@drawable/bg_pill_blue"
+            android:contentDescription="Edit Profil"
+            android:padding="10dp"
+            android:src="@drawable/ic_prof_store"
+            app:tint="@color/royal_blue" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="8dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Edit Profil Outlet"
+                android:textColor="@color/deep_slate_navy"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="1dp"
+                android:text="Perbarui identitas usaha &amp; kontak pemilik"
+                android:textColor="@color/slate_gray"
+                android:textSize="10.5sp" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/btnCloseEditProfile"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:background="@drawable/bg_input_field"
+            android:gravity="center"
+            android:text="✕"
+            android:textColor="@color/slate_gray"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <!-- Bagian Foto Profil Outlet -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:background="@drawable/bg_input_field"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="10dp">
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            app:cardBackgroundColor="#EFF6FF"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="0dp">
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <TextView
+                    android:id="@+id/tvEditAvatarFallback"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:text="W"
+                    android:textColor="@color/royal_blue"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <ImageView
+                    android:id="@+id/ivEditOutletAvatar"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:contentDescription="Preview Foto Outlet"
+                    android:scaleType="centerCrop"
+                    android:visibility="gone" />
+            </FrameLayout>
+        </androidx.cardview.widget.CardView>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Foto Profil Outlet / Kasir"
+                android:textColor="@color/deep_slate_navy"
+                android:textSize="11.5sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:id="@+id/btnPickOutletPhoto"
+                android:layout_width="wrap_content"
+                android:layout_height="28dp"
+                android:layout_marginTop="5dp"
+                android:background="@drawable/bg_pill_blue"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:paddingHorizontal="10dp">
+
+                <ImageView
+                    android:layout_width="13dp"
+                    android:layout_height="13dp"
+                    android:contentDescription="Kamera"
+                    android:src="@drawable/ic_exp_camera"
+                    app:tint="@color/royal_blue" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="5dp"
+                    android:text="Pilih Foto Galeri"
+                    android:textColor="@color/royal_blue"
+                    android:textSize="10.5sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- 1. Nama Tempat Steam -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Nama Tempat Steam *"
+            android:textColor="@color/deep_slate_navy"
+            android:textSize="11.5sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Wajib"
+            android:textColor="@color/slate_gray"
+            android:textSize="10sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:layout_marginTop="5dp"
+        android:background="@drawable/bg_input_field"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="12dp">
+
+        <ImageView
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:contentDescription="Outlet"
+            android:src="@drawable/ic_prof_store"
+            app:tint="@color/slate_gray" />
+
+        <EditText
+            android:id="@+id/etEditOutletName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:background="@null"
+            android:hint="Contoh: OtoWash Buah Batu"
+            android:inputType="textCapWords"
+            android:singleLine="true"
+            android:textColor="@color/deep_slate_navy"
+            android:textColorHint="@color/slate_gray"
+            android:textSize="12.5sp" />
+    </LinearLayout>
+
+    <!-- 2. Nomor WhatsApp Pemilik -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Nomor WhatsApp Pemilik"
+            android:textColor="@color/deep_slate_navy"
+            android:textSize="11.5sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_pill_green"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="2dp"
+            android:text="• Aktif Laporan"
+            android:textColor="@color/emerald_green"
+            android:textSize="9.5sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:layout_marginTop="5dp"
+        android:background="@drawable/bg_input_field"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="12dp">
+
+        <ImageView
+            android:layout_width="18dp"
+            android:layout_height="13dp"
+            android:contentDescription="ID"
+            android:src="@drawable/ic_flag_id" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:text="+62"
+            android:textColor="@color/deep_slate_navy"
+            android:textSize="12.5sp"
+            android:textStyle="bold" />
+
+        <View
+            android:layout_width="1dp"
+            android:layout_height="20dp"
+            android:layout_marginHorizontal="8dp"
+            android:background="@color/card_border" />
+
+        <EditText
+            android:id="@+id/etEditOwnerPhone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@null"
+            android:hint="812-3456-7890"
+            android:inputType="phone"
+            android:singleLine="true"
+            android:textColor="@color/deep_slate_navy"
+            android:textColorHint="@color/slate_gray"
+            android:textSize="12.5sp" />
+    </LinearLayout>
+
+    <!-- 3. Alamat Singkat / Kota -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:text="Alamat Singkat / Kota (Opsional)"
+        android:textColor="@color/deep_slate_navy"
+        android:textSize="11.5sp"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:layout_marginTop="5dp"
+        android:background="@drawable/bg_input_field"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="12dp">
+
+        <ImageView
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:contentDescription="Lokasi"
+            android:src="@drawable/ic_prof_location"
+            app:tint="@color/slate_gray" />
+
+        <EditText
+            android:id="@+id/etEditAddress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:background="@null"
+            android:hint="Contoh: Jl. Buah Batu No. 138, Bandung"
+            android:inputType="textPostalAddress"
+            android:singleLine="true"
+            android:textColor="@color/deep_slate_navy"
+            android:textColorHint="@color/slate_gray"
+            android:textSize="12.5sp" />
+    </LinearLayout>
+
+    <!-- Banner Info Header PDF & Footer Struk WA -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/bg_banner_blue"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="10dp">
+
+        <ImageView
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:contentDescription="Info"
+            android:src="@drawable/ic_info_blue" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:text="Informasi ini akan dicetak secara otomatis pada header laporan PDF &amp; footer struk digital WhatsApp pelanggan."
+            android:textColor="@color/deep_slate_navy"
+            android:textSize="10sp" />
+    </LinearLayout>
+
+    <!-- Tombol Simpan Perubahan -->
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/btnSaveProfileEdit"
+        android:layout_width="match_parent"
+        android:layout_height="46dp"
+        android:layout_marginTop="14dp"
+        android:background="@drawable/bg_btn_navy"
+        android:text="✓  Simpan Perubahan"
+        android:textAllCaps="false"
+        android:textColor="@color/white"
+        android:textSize="13sp"
+        android:textStyle="bold" />
+
+</LinearLayout>

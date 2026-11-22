@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="8dp"
+    android:background="@drawable/bg_card_white"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:padding="12dp">
+
+    <!-- Ikon Kategori Vektor -->
+    <ImageView
+        android:id="@+id/ivExpIcon"
+        android:layout_width="38dp"
+        android:layout_height="38dp"
+        android:background="@drawable/bg_chip_unselected"
+        android:contentDescription="Kategori Pengeluaran"
+        android:padding="9dp"
+        android:src="@drawable/ic_exp_sabun"
+        app:tint="@color/royal_blue" />
+
+    <!-- Detail Nama, Nominal, Jam & Kategori -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="6dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tvExpTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Shampo Salju &amp; Semir Ban 5L"
+            android:textColor="@color/deep_slate_navy"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tvExpAmount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Rp 75.000"
+                android:textColor="#DC2626"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvExpMeta"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=" • 11:20 WIB • Kasir"
+                android:textColor="@color/slate_gray"
+                android:textSize="10.5sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tvExpCategory"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_banner_blue"
+                android:paddingHorizontal="7dp"
+                android:paddingVertical="2dp"
+                android:text="Bahan Kimia/Sabun"
+                android:textColor="@color/royal_blue"
+                android:textSize="9sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvExpViewReceipt"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/bg_pill_green"
+                android:paddingHorizontal="7dp"
+                android:paddingVertical="2dp"
+                android:text="Lihat Nota"
+                android:textColor="@color/emerald_green"
+                android:textSize="9sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Tombol Edit (Dilindungi PIN) -->
+    <ImageView
+        android:id="@+id/btnEditExp"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginEnd="6dp"
+        android:background="@drawable/bg_banner_blue"
+        android:contentDescription="Edit Pengeluaran"
+        android:padding="7dp"
+        android:src="@drawable/ic_exp_edit"
+        app:tint="@color/royal_blue" />
+
+    <!-- Tombol Hapus (Dilindungi PIN) -->
+    <ImageView
+        android:id="@+id/btnDeleteExp"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:background="@drawable/bg_delete_red"
+        android:contentDescription="Hapus Pengeluaran"
+        android:padding="7dp"
+        android:src="@drawable/ic_exp_trash"
+        app:tint="#DC2626" />
+
+</LinearLayout>

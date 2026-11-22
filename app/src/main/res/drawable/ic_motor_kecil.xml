@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Roda Belakang & Depan -->
+    <path
+        android:fillColor="#0284C7"
+        android:pathData="M5.5,14.5A3,3 0 1,0 5.5,20.5A3,3 0 1,0 5.5,14.5ZM5.5,16.3A1.2,1.2 0 1,1 5.5,18.7A1.2,1.2 0 1,1 5.5,16.3ZM18.5,14.5A3,3 0 1,0 18.5,20.5A3,3 0 1,0 18.5,14.5ZM18.5,16.3A1.2,1.2 0 1,1 18.5,18.7A1.2,1.2 0 1,1 18.5,16.3Z" />
+    <!-- Bodi Ramping Motor Bebek -->
+    <path
+        android:fillColor="#0284C7"
+        android:pathData="M4.2,11.5L11.2,11.5L12.6,14.8L14.8,14.8L16.1,9.5L14.3,8L16.3,7.3L18.9,16.8L17.4,17.3L16.1,12.5L14.9,16.2L11.3,16.2L9.8,13.2L5.2,13.2Z" />
+</vector>

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="8dp"
+    android:background="@drawable/bg_input_field"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:padding="12dp">
+
+    <!-- Avatar Bulat Inisial Pekerja -->
+    <TextView
+        android:id="@+id/tvWorkerInitial"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:background="@drawable/bg_pill_blue"
+        android:gravity="center"
+        android:text="B"
+        android:textColor="@color/royal_blue"
+        android:textSize="15sp"
+        android:textStyle="bold" />
+
+    <!-- Nama, Badge Status Aktif/Non-Aktif & Detail -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="8dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tvWorkerName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Budi Santosa"
+                android:textColor="@color/deep_slate_navy"
+                android:textSize="13.5sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvWorkerStatusBadge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/bg_pill_green"
+                android:paddingHorizontal="7dp"
+                android:paddingVertical="2dp"
+                android:text="Aktif"
+                android:textColor="@color/emerald_green"
+                android:textSize="9sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvWorkerMeta"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="Shift Pagi • 0 motor dicuci"
+            android:textColor="@color/slate_gray"
+            android:textSize="10.5sp" />
+    </LinearLayout>
+
+    <!-- Toggle Switch Aktif/Non-Aktif -->
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/swWorkerActive"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+</LinearLayout>

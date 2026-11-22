@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="8dp"
+    android:background="@drawable/bg_card_white"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:padding="12dp">
+
+    <!-- Avatar Inisial Bulat Biru Muda -->
+    <TextView
+        android:id="@+id/tvWorkerCommInitial"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:background="@drawable/bg_circle_light_blue"
+        android:gravity="center"
+        android:text="A"
+        android:textColor="@color/royal_blue"
+        android:textSize="14sp"
+        android:textStyle="bold" />
+
+    <!-- Nama & Detail Motor -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="8dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tvWorkerCommName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Asep Sunandar"
+            android:textColor="@color/deep_slate_navy"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvWorkerCommDetail"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="0 Motor Selesai"
+            android:textColor="@color/slate_gray"
+            android:textSize="10.5sp" />
+    </LinearLayout>
+
+    <!-- Nominal Komisi & Badge Siap Cair -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="end"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tvWorkerCommAmount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Rp 0"
+            android:textColor="@color/deep_slate_navy"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:background="@drawable/bg_badge_green"
+            android:paddingHorizontal="7dp"
+            android:paddingVertical="2dp"
+            android:text="Siap Cair"
+            android:textColor="@color/emerald_green"
+            android:textSize="9sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+</LinearLayout>
