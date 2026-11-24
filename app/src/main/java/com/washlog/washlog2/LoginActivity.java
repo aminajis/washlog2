@@ -128,6 +128,20 @@ public class LoginActivity extends AppCompatActivity {
         return clean;
     }
 
+    private String getStringOrDefault(JsonObject obj, String key, String defaultVal) {
+        if (obj.has(key) && !obj.get(key).isJsonNull()) {
+            return obj.get(key).getAsString();
+        }
+        return defaultVal;
+    }
+
+    private int getIntOrDefault(JsonObject obj, String key, int defaultVal) {
+        if (obj.has(key) && !obj.get(key).isJsonNull()) {
+            return obj.get(key).getAsInt();
+        }
+        return defaultVal;
+    }
+
     private void prosesLogin() {
         String rawPhone = etLoginPhone.getText().toString().trim();
         if (rawPhone.isEmpty()) {
@@ -166,11 +180,20 @@ public class LoginActivity extends AppCompatActivity {
                     JsonArray results = JsonParser.parseString(body).getAsJsonArray();
                     if (results.size() > 0) {
                         JsonObject outlet = results.get(0).getAsJsonObject();
-                        String id = outlet.get("id").getAsString();
-                        String name = outlet.get("outlet_name").getAsString();
-                        String phone = outlet.get("owner_phone").getAsString();
+                        String id = getStringOrDefault(outlet, "id", "");
+                        String name = getStringOrDefault(outlet, "outlet_name", "Outlet WashLog");
+                        String phone = getStringOrDefault(outlet, "owner_phone", phoneInput);
+
+                        String ownerPin = getStringOrDefault(outlet, "owner_pin", "");
+                        int commissionPct = getIntOrDefault(outlet, "worker_commission_pct", 40);
+                        int priceSmall = getIntOrDefault(outlet, "price_small", 15000);
+                        int priceMedium = getIntOrDefault(outlet, "price_medium", 20000);
+                        int priceLarge = getIntOrDefault(outlet, "price_large", 25000);
+                        String avatarBase64 = getStringOrDefault(outlet, "avatar_base64", "");
 
                         sessionManager.saveOutletSession(id, name, phone);
+                        sessionManager.saveOutletConfig(ownerPin, commissionPct, priceSmall, priceMedium, priceLarge, avatarBase64);
+
                         Toast.makeText(LoginActivity.this, "Selamat datang, " + name + "!", Toast.LENGTH_SHORT).show();
 
                         startActivity(new Intent(LoginActivity.this, MainActivity.class));

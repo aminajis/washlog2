@@ -7,9 +7,13 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.InputFilter;
+import android.text.InputType;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
@@ -37,6 +41,7 @@ import com.google.gson.JsonParser;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.NumberFormat;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -53,13 +58,19 @@ public class ProfileActivity extends AppCompatActivity {
     private ImageView ivProfileOutletAvatar, ivProfileAvatarFallback;
     private TextView tvProfileOutletName, tvProfileOwnerPhone, tvWorkerCountHeader;
     private TextView tvPrefWorkerPct, tvPrefOpsPct, tvPrefOwnerPct;
+    private TextView tvPrefPriceSmall, tvPrefPriceMedium, tvPrefPriceLarge;
     private ProgressBar pbProfile;
     private LinearLayout cardEmptyWorkers, llWorkerList;
 
     private String currentOutletName = "Outlet WashLog";
     private String currentOwnerPhone = "-";
     private String currentAddress = "";
-    private String currentPin = "";
+    private String currentKasirPin = "";
+    private String currentOwnerPin = "";
+    private int currentWorkerPct = 40;
+    private int currentPriceSmall = 15000;
+    private int currentPriceMedium = 20000;
+    private int currentPriceLarge = 25000;
 
     private Bitmap pendingOutletBitmap = null;
     private ImageView activeDialogAvatarView = null;
@@ -112,15 +123,28 @@ public class ProfileActivity extends AppCompatActivity {
         tvProfileOutletName = findViewById(R.id.tvProfileOutletName);
         tvProfileOwnerPhone = findViewById(R.id.tvProfileOwnerPhone);
         tvWorkerCountHeader = findViewById(R.id.tvWorkerCountHeader);
+
         tvPrefWorkerPct = findViewById(R.id.tvPrefWorkerPct);
         tvPrefOpsPct = findViewById(R.id.tvPrefOpsPct);
         tvPrefOwnerPct = findViewById(R.id.tvPrefOwnerPct);
+
+        tvPrefPriceSmall = findViewById(R.id.tvPrefPriceSmall);
+        tvPrefPriceMedium = findViewById(R.id.tvPrefPriceMedium);
+        tvPrefPriceLarge = findViewById(R.id.tvPrefPriceLarge);
+
         pbProfile = findViewById(R.id.pbProfile);
         cardEmptyWorkers = findViewById(R.id.cardEmptyWorkers);
         llWorkerList = findViewById(R.id.llWorkerList);
 
         currentOutletName = sessionManager.getOutletName().isEmpty() ? "Outlet WashLog" : sessionManager.getOutletName();
+        currentOwnerPin = sessionManager.getOwnerPin();
+        currentWorkerPct = sessionManager.getCommissionPct();
+        currentPriceSmall = sessionManager.getPriceSmall();
+        currentPriceMedium = sessionManager.getPriceMedium();
+        currentPriceLarge = sessionManager.getPriceLarge();
+
         tvProfileOutletName.setText(currentOutletName);
+        updatePreferencesDisplay();
         loadProfileAvatar();
 
         findViewById(R.id.btnBackProfile).setOnClickListener(v -> finish());
@@ -146,10 +170,23 @@ public class ProfileActivity extends AppCompatActivity {
             }
         });
 
-        findViewById(R.id.btnOpenChangePin).setOnClickListener(v -> showChangePinDialog());
-        findViewById(R.id.btnOpenEditProfile).setOnClickListener(v -> showEditProfileDialog());
-        findViewById(R.id.cardProfileAvatar).setOnClickListener(v -> showEditProfileDialog());
-        findViewById(R.id.btnAddWorker).setOnClickListener(v -> showAddWorkerDialog());
+        findViewById(R.id.btnOpenChangePin).setOnClickListener(v ->
+                requireOwnerPin("Ubah PIN Kasir", this::showChangePinDialog));
+
+        findViewById(R.id.btnOpenChangeOwnerPin).setOnClickListener(v ->
+                requireOwnerPin("Ubah PIN Owner", this::showChangeOwnerPinDialog));
+
+        findViewById(R.id.btnOpenEditProfile).setOnClickListener(v ->
+                requireOwnerPin("Edit Profil Outlet", this::showEditProfileDialog));
+
+        findViewById(R.id.cardProfileAvatar).setOnClickListener(v ->
+                requireOwnerPin("Ubah Foto Outlet", this::showEditProfileDialog));
+
+        findViewById(R.id.btnAddWorker).setOnClickListener(v ->
+                requireOwnerPin("Tambah Pekerja", this::showAddWorkerDialog));
+
+        findViewById(R.id.btnEditSystemPrefs).setOnClickListener(v ->
+                requireOwnerPin("Ubah Komisi & Tarif", this::showEditPrefsDialog));
 
         findViewById(R.id.btnLogoutShift).setOnClickListener(v -> {
             sessionManager.logout();
@@ -160,6 +197,164 @@ public class ProfileActivity extends AppCompatActivity {
         });
 
         loadProfileAndWorkers();
+    }
+
+    private void styleDialogEditText(EditText et, float density) {
+        int padH = (int) (14 * density);
+        int padV = (int) (12 * density);
+        et.setTextColor(ContextCompat.getColor(this, R.color.deep_slate_navy));
+        et.setHintTextColor(Color.parseColor("#94A3B8"));
+        et.setTextSize(14f);
+        et.setBackgroundResource(R.drawable.bg_input_field);
+        et.setPadding(padH, padV, padH, padV);
+    }
+
+    private LinearLayout createDialogCardContainer(float density) {
+        int pad = (int) (20 * density);
+        LinearLayout container = new LinearLayout(this);
+        container.setOrientation(LinearLayout.VERTICAL);
+        container.setPadding(pad, pad, pad, pad);
+        container.setBackgroundResource(R.drawable.bg_dialog_white);
+        return container;
+    }
+
+    private TextView createDialogTitle(String titleText) {
+        TextView tvTitle = new TextView(this);
+        tvTitle.setText(titleText);
+        tvTitle.setTextColor(ContextCompat.getColor(this, R.color.deep_slate_navy));
+        tvTitle.setTextSize(17f);
+        tvTitle.setTypeface(null, Typeface.BOLD);
+        return tvTitle;
+    }
+
+    private TextView createFieldLabel(String labelText, float density, int topMarginDp) {
+        TextView lbl = new TextView(this);
+        lbl.setText(labelText);
+        lbl.setTextColor(ContextCompat.getColor(this, R.color.deep_slate_navy));
+        lbl.setTextSize(12f);
+        lbl.setTypeface(null, Typeface.BOLD);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        lp.topMargin = (int) (topMarginDp * density);
+        lbl.setLayoutParams(lp);
+        return lbl;
+    }
+
+    private LinearLayout createDialogButtonsRow(float density, String positiveText, Runnable onCancel, Runnable onConfirm) {
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        LinearLayout.LayoutParams rowLp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        rowLp.topMargin = (int) (18 * density);
+        row.setLayoutParams(rowLp);
+
+        int btnHeight = (int) (44 * density);
+
+        TextView btnCancel = new TextView(this);
+        btnCancel.setText("Batal");
+        btnCancel.setTextColor(ContextCompat.getColor(this, R.color.deep_slate_navy));
+        btnCancel.setTextSize(13f);
+        btnCancel.setTypeface(null, Typeface.BOLD);
+        btnCancel.setGravity(Gravity.CENTER);
+        btnCancel.setBackgroundResource(R.drawable.bg_input_field);
+        LinearLayout.LayoutParams cancelLp = new LinearLayout.LayoutParams(0, btnHeight, 1f);
+        cancelLp.setMarginEnd((int) (8 * density));
+        btnCancel.setLayoutParams(cancelLp);
+        btnCancel.setOnClickListener(v -> onCancel.run());
+
+        TextView btnOk = new TextView(this);
+        btnOk.setText(positiveText);
+        btnOk.setTextColor(Color.WHITE);
+        btnOk.setTextSize(13f);
+        btnOk.setTypeface(null, Typeface.BOLD);
+        btnOk.setGravity(Gravity.CENTER);
+        btnOk.setBackgroundResource(R.drawable.bg_btn_navy);
+        LinearLayout.LayoutParams okLp = new LinearLayout.LayoutParams(0, btnHeight, 1f);
+        btnOk.setLayoutParams(okLp);
+        btnOk.setOnClickListener(v -> onConfirm.run());
+
+        row.addView(btnCancel);
+        row.addView(btnOk);
+        return row;
+    }
+
+    /**
+     * Dialog verifikasi 4-digit PIN Owner dengan kartu putih solid (anti-Dark Mode transparan)
+     */
+    private void requireOwnerPin(String actionTitle, Runnable onAuthorized) {
+        String expectedPin = !currentOwnerPin.isEmpty() ? currentOwnerPin : sessionManager.getOwnerPin();
+        if (expectedPin.isEmpty()) {
+            expectedPin = currentKasirPin;
+        }
+        if (expectedPin.isEmpty()) {
+            onAuthorized.run();
+            return;
+        }
+
+        final String targetPin = expectedPin;
+        float density = getResources().getDisplayMetrics().density;
+
+        LinearLayout container = createDialogCardContainer(density);
+        container.addView(createDialogTitle("🔐 Verifikasi PIN Owner"));
+
+        TextView tvSubtitle = new TextView(this);
+        tvSubtitle.setText("Masukkan 4-digit PIN Owner untuk melanjutkan aksi \"" + actionTitle + "\".");
+        tvSubtitle.setTextColor(ContextCompat.getColor(this, R.color.slate_gray));
+        tvSubtitle.setTextSize(12.5f);
+        LinearLayout.LayoutParams subLp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        subLp.topMargin = (int) (6 * density);
+        tvSubtitle.setLayoutParams(subLp);
+        container.addView(tvSubtitle);
+
+        EditText etPinInput = new EditText(this);
+        etPinInput.setHint("• • • •");
+        etPinInput.setGravity(Gravity.CENTER);
+        etPinInput.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_VARIATION_PASSWORD);
+        etPinInput.setFilters(new InputFilter[]{new InputFilter.LengthFilter(4)});
+        styleDialogEditText(etPinInput, density);
+        etPinInput.setTextSize(22f);
+        etPinInput.setTypeface(Typeface.DEFAULT_BOLD);
+
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        lp.topMargin = (int) (14 * density);
+        etPinInput.setLayoutParams(lp);
+        container.addView(etPinInput);
+
+        AlertDialog dialog = new AlertDialog.Builder(this).setView(container).create();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        }
+
+        container.addView(createDialogButtonsRow(density, "Verifikasi", dialog::dismiss, () -> {
+            String entered = etPinInput.getText().toString().trim();
+            if (entered.equals(targetPin)) {
+                dialog.dismiss();
+                onAuthorized.run();
+            } else {
+                Toast.makeText(this, "PIN Owner salah! Akses ditolak.", Toast.LENGTH_SHORT).show();
+            }
+        }));
+
+        dialog.show();
+    }
+
+    private void updatePreferencesDisplay() {
+        int ownerPct = 20;
+        int opsPct = Math.max(0, 100 - currentWorkerPct - ownerPct);
+        tvPrefWorkerPct.setText(currentWorkerPct + "%");
+        tvPrefOpsPct.setText(opsPct + "%");
+        tvPrefOwnerPct.setText(ownerPct + "%");
+
+        tvPrefPriceSmall.setText(formatRupiah(currentPriceSmall));
+        tvPrefPriceMedium.setText(formatRupiah(currentPriceMedium));
+        tvPrefPriceLarge.setText(formatRupiah(currentPriceLarge));
+    }
+
+    private String formatRupiah(int amount) {
+        NumberFormat nf = NumberFormat.getInstance(new Locale("id", "ID"));
+        return "Rp " + nf.format(amount);
     }
 
     private void loadProfileAvatar() {
@@ -180,7 +375,6 @@ public class ProfileActivity extends AppCompatActivity {
 
         pbProfile.setVisibility(View.VISIBLE);
 
-        // 1. Ambil profil outlet & sinkronkan ke SessionManager
         SupabaseClient.get("outlets?id=eq." + outletId + "&select=*", new Callback() {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {}
@@ -196,25 +390,34 @@ public class ProfileActivity extends AppCompatActivity {
                         currentOutletName = getStr(obj, "outlet_name", currentOutletName);
                         currentOwnerPhone = getStr(obj, "owner_phone", "-");
                         currentAddress = getStr(obj, "address", "");
-                        currentPin = getStr(obj, "kasir_pin", "");
+                        currentKasirPin = getStr(obj, "kasir_pin", "");
+                        currentOwnerPin = getStr(obj, "owner_pin", currentOwnerPin);
 
-                        int workerPct = (obj.has("worker_commission_pct") && !obj.get("worker_commission_pct").isJsonNull())
-                                ? obj.get("worker_commission_pct").getAsInt() : 40;
-                        int ownerPct = 20;
-                        int opsPct = Math.max(0, 100 - workerPct - ownerPct);
-                        tvPrefWorkerPct.setText(workerPct + "%");
-                        tvPrefOpsPct.setText(opsPct + "%");
-                        tvPrefOwnerPct.setText(ownerPct + "%");
+                        currentWorkerPct = getInt(obj, "worker_commission_pct", 40);
+                        currentPriceSmall = getInt(obj, "price_small", 15000);
+                        currentPriceMedium = getInt(obj, "price_medium", 20000);
+                        currentPriceLarge = getInt(obj, "price_large", 25000);
+                        String avatarBase64 = getStr(obj, "avatar_base64", "");
 
                         sessionManager.updateOutletInfo(currentOutletName, currentOwnerPhone);
+                        sessionManager.saveOutletConfig(
+                                currentOwnerPin,
+                                currentWorkerPct,
+                                currentPriceSmall,
+                                currentPriceMedium,
+                                currentPriceLarge,
+                                avatarBase64
+                        );
+
                         tvProfileOutletName.setText(currentOutletName);
                         tvProfileOwnerPhone.setText(currentOwnerPhone);
+                        updatePreferencesDisplay();
+                        loadProfileAvatar();
                     }
                 });
             }
         });
 
-        // 2. Hitung total motor cuci per washer dari transaksi
         SupabaseClient.get("transactions?outlet_id=eq." + outletId + "&select=*", new Callback() {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
@@ -312,28 +515,43 @@ public class ProfileActivity extends AppCompatActivity {
             swWorkerActive.setChecked(isActive);
             applyWorkerStatusBadge(tvWorkerStatusBadge, isActive);
 
-            swWorkerActive.setOnCheckedChangeListener((buttonView, checked) -> {
-                applyWorkerStatusBadge(tvWorkerStatusBadge, checked);
-                if (workerId.isEmpty()) return;
-                JsonObject patchBody = new JsonObject();
-                patchBody.addProperty("is_active", checked);
-                SupabaseClient.patch("workers?id=eq." + workerId, patchBody.toString(), new Callback() {
-                    @Override
-                    public void onFailure(@NonNull Call call, @NonNull IOException e) {}
+            swWorkerActive.setOnClickListener(v -> {
+                boolean desiredState = swWorkerActive.isChecked();
+                swWorkerActive.setChecked(!desiredState);
 
-                    @Override
-                    public void onResponse(@NonNull Call call, @NonNull Response response) {}
+                requireOwnerPin((desiredState ? "Aktifkan " : "Nonaktifkan ") + name, () -> {
+                    swWorkerActive.setChecked(desiredState);
+                    applyWorkerStatusBadge(tvWorkerStatusBadge, desiredState);
+                    if (workerId.isEmpty()) return;
+
+                    JsonObject patchBody = new JsonObject();
+                    patchBody.addProperty("is_active", desiredState);
+                    SupabaseClient.patch("workers?id=eq." + workerId, patchBody.toString(), new Callback() {
+                        @Override
+                        public void onFailure(@NonNull Call call, @NonNull IOException e) {}
+
+                        @Override
+                        public void onResponse(@NonNull Call call, @NonNull Response response) {
+                            runOnUiThread(() -> Toast.makeText(
+                                    ProfileActivity.this,
+                                    name + (desiredState ? " diaktifkan" : " dinonaktifkan"),
+                                    Toast.LENGTH_SHORT
+                            ).show());
+                        }
+                    });
                 });
             });
 
             item.setOnLongClickListener(v -> {
                 if (workerId.isEmpty()) return true;
-                new AlertDialog.Builder(this)
-                        .setTitle("Hapus Pekerja")
-                        .setMessage("Yakin ingin menghapus " + name + "?")
-                        .setPositiveButton("Hapus", (d, which) -> deleteWorkerFromSupabase(workerId, name))
-                        .setNegativeButton("Batal", null)
-                        .show();
+                requireOwnerPin("Hapus Pekerja", () ->
+                        new AlertDialog.Builder(this)
+                                .setTitle("Hapus Pekerja")
+                                .setMessage("Yakin ingin menghapus " + name + "?")
+                                .setPositiveButton("Hapus", (d, which) -> deleteWorkerFromSupabase(workerId, name))
+                                .setNegativeButton("Batal", null)
+                                .show()
+                );
                 return true;
             });
 
@@ -379,6 +597,132 @@ public class ProfileActivity extends AppCompatActivity {
                 });
             }
         });
+    }
+
+    private void showEditPrefsDialog() {
+        float density = getResources().getDisplayMetrics().density;
+
+        LinearLayout container = createDialogCardContainer(density);
+        container.addView(createDialogTitle("Ubah Komisi & Tarif Motor"));
+
+        // 1. Persentase Komisi Pekerja
+        container.addView(createFieldLabel("Persentase Komisi Pekerja (%) — Pemilik tetap 20%", density, 14));
+        EditText etPct = new EditText(this);
+        etPct.setInputType(InputType.TYPE_CLASS_NUMBER);
+        etPct.setText(String.valueOf(currentWorkerPct));
+        styleDialogEditText(etPct, density);
+        LinearLayout.LayoutParams lpPct = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        lpPct.topMargin = (int) (5 * density);
+        etPct.setLayoutParams(lpPct);
+        container.addView(etPct);
+
+        // 2. Tarif Motor Kecil
+        container.addView(createFieldLabel("Tarif Motor Kecil (Rp)", density, 12));
+        EditText etSmall = new EditText(this);
+        etSmall.setInputType(InputType.TYPE_CLASS_NUMBER);
+        etSmall.setText(String.valueOf(currentPriceSmall));
+        styleDialogEditText(etSmall, density);
+        LinearLayout.LayoutParams lpSmall = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        lpSmall.topMargin = (int) (5 * density);
+        etSmall.setLayoutParams(lpSmall);
+        container.addView(etSmall);
+
+        // 3. Tarif Motor Sedang
+        container.addView(createFieldLabel("Tarif Motor Sedang (Rp)", density, 12));
+        EditText etMedium = new EditText(this);
+        etMedium.setInputType(InputType.TYPE_CLASS_NUMBER);
+        etMedium.setText(String.valueOf(currentPriceMedium));
+        styleDialogEditText(etMedium, density);
+        LinearLayout.LayoutParams lpMed = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        lpMed.topMargin = (int) (5 * density);
+        etMedium.setLayoutParams(lpMed);
+        container.addView(etMedium);
+
+        // 4. Tarif Motor Besar
+        container.addView(createFieldLabel("Tarif Motor Besar (Rp)", density, 12));
+        EditText etLarge = new EditText(this);
+        etLarge.setInputType(InputType.TYPE_CLASS_NUMBER);
+        etLarge.setText(String.valueOf(currentPriceLarge));
+        styleDialogEditText(etLarge, density);
+        LinearLayout.LayoutParams lpLarge = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        lpLarge.topMargin = (int) (5 * density);
+        etLarge.setLayoutParams(lpLarge);
+        container.addView(etLarge);
+
+        AlertDialog dialog = new AlertDialog.Builder(this).setView(container).create();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        }
+
+        container.addView(createDialogButtonsRow(density, "Simpan", dialog::dismiss, () -> {
+            String strPct = etPct.getText().toString().trim();
+            String strSmall = etSmall.getText().toString().trim();
+            String strMedium = etMedium.getText().toString().trim();
+            String strLarge = etLarge.getText().toString().trim();
+
+            if (strPct.isEmpty() || strSmall.isEmpty() || strMedium.isEmpty() || strLarge.isEmpty()) {
+                Toast.makeText(this, "Semua kolom komisi dan tarif wajib diisi", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            int newPct = Integer.parseInt(strPct);
+            int newSmall = Integer.parseInt(strSmall);
+            int newMedium = Integer.parseInt(strMedium);
+            int newLarge = Integer.parseInt(strLarge);
+
+            if (newPct < 0 || newPct > 80) {
+                Toast.makeText(this, "Komisi pekerja harus antara 0% - 80%", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (newSmall <= 0 || newMedium <= 0 || newLarge <= 0) {
+                Toast.makeText(this, "Tarif motor harus lebih dari Rp 0", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            dialog.dismiss();
+            JsonObject patchBody = new JsonObject();
+            patchBody.addProperty("worker_commission_pct", newPct);
+            patchBody.addProperty("price_small", newSmall);
+            patchBody.addProperty("price_medium", newMedium);
+            patchBody.addProperty("price_large", newLarge);
+
+            pbProfile.setVisibility(View.VISIBLE);
+            SupabaseClient.patch("outlets?id=eq." + sessionManager.getOutletId(), patchBody.toString(), new Callback() {
+                @Override
+                public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                    runOnUiThread(() -> {
+                        pbProfile.setVisibility(View.GONE);
+                        Toast.makeText(ProfileActivity.this, "Gagal menyimpan perubahan", Toast.LENGTH_SHORT).show();
+                    });
+                }
+
+                @Override
+                public void onResponse(@NonNull Call call, @NonNull Response response) {
+                    runOnUiThread(() -> {
+                        pbProfile.setVisibility(View.GONE);
+                        if (response.isSuccessful()) {
+                            currentWorkerPct = newPct;
+                            currentPriceSmall = newSmall;
+                            currentPriceMedium = newMedium;
+                            currentPriceLarge = newLarge;
+
+                            sessionManager.setCommissionPct(newPct);
+                            sessionManager.setMotorPrices(newSmall, newMedium, newLarge);
+                            updatePreferencesDisplay();
+                            Toast.makeText(ProfileActivity.this, "Komisi & tarif motor diperbarui!", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(ProfileActivity.this, "Gagal update ke server (" + response.code() + ")", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+            });
+        }));
+
+        dialog.show();
     }
 
     private void showAddWorkerDialog() {
@@ -527,16 +871,20 @@ public class ProfileActivity extends AppCompatActivity {
             String newPin = etNewPin.getText().toString().trim();
             String confirmPin = etConfirmPin.getText().toString().trim();
 
-            if (!currentPin.isEmpty() && !oldPin.equals(currentPin)) {
-                Toast.makeText(this, "PIN saat ini tidak sesuai", Toast.LENGTH_SHORT).show();
+            if (!currentKasirPin.isEmpty() && !oldPin.equals(currentKasirPin)) {
+                Toast.makeText(this, "PIN Kasir saat ini tidak sesuai", Toast.LENGTH_SHORT).show();
                 return;
             }
             if (newPin.length() != 4) {
-                Toast.makeText(this, "PIN baru harus 4 digit", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "PIN Kasir baru harus 4 digit", Toast.LENGTH_SHORT).show();
                 return;
             }
             if (!newPin.equals(confirmPin)) {
                 Toast.makeText(this, "Konfirmasi PIN baru tidak cocok", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (newPin.equals(currentOwnerPin)) {
+                Toast.makeText(this, "PIN Kasir tidak boleh sama dengan PIN Owner", Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -546,19 +894,99 @@ public class ProfileActivity extends AppCompatActivity {
             SupabaseClient.patch("outlets?id=eq." + sessionManager.getOutletId(), patchBody.toString(), new Callback() {
                 @Override
                 public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                    runOnUiThread(() -> Toast.makeText(ProfileActivity.this, "Gagal ubah PIN", Toast.LENGTH_SHORT).show());
+                    runOnUiThread(() -> Toast.makeText(ProfileActivity.this, "Gagal ubah PIN Kasir", Toast.LENGTH_SHORT).show());
                 }
 
                 @Override
                 public void onResponse(@NonNull Call call, @NonNull Response response) {
                     runOnUiThread(() -> {
-                        currentPin = newPin;
+                        currentKasirPin = newPin;
                         dialog.dismiss();
                         Toast.makeText(ProfileActivity.this, "PIN Kasir berhasil diperbarui!", Toast.LENGTH_SHORT).show();
                     });
                 }
             });
         });
+
+        dialog.show();
+    }
+
+    private void showChangeOwnerPinDialog() {
+        float density = getResources().getDisplayMetrics().density;
+
+        LinearLayout container = createDialogCardContainer(density);
+        container.addView(createDialogTitle("Ubah PIN Owner"));
+
+        container.addView(createFieldLabel("PIN Owner Baru (4 digit)", density, 14));
+        EditText etNewOwnerPin = new EditText(this);
+        etNewOwnerPin.setHint("Masukkan 4 digit PIN baru");
+        etNewOwnerPin.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_VARIATION_PASSWORD);
+        etNewOwnerPin.setFilters(new InputFilter[]{new InputFilter.LengthFilter(4)});
+        styleDialogEditText(etNewOwnerPin, density);
+        LinearLayout.LayoutParams lp1 = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        lp1.topMargin = (int) (5 * density);
+        etNewOwnerPin.setLayoutParams(lp1);
+        container.addView(etNewOwnerPin);
+
+        container.addView(createFieldLabel("Konfirmasi PIN Owner Baru", density, 12));
+        EditText etConfirmOwnerPin = new EditText(this);
+        etConfirmOwnerPin.setHint("Ulangi 4 digit PIN baru");
+        etConfirmOwnerPin.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_VARIATION_PASSWORD);
+        etConfirmOwnerPin.setFilters(new InputFilter[]{new InputFilter.LengthFilter(4)});
+        styleDialogEditText(etConfirmOwnerPin, density);
+        LinearLayout.LayoutParams lp2 = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        lp2.topMargin = (int) (5 * density);
+        etConfirmOwnerPin.setLayoutParams(lp2);
+        container.addView(etConfirmOwnerPin);
+
+        AlertDialog dialog = new AlertDialog.Builder(this).setView(container).create();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        }
+
+        container.addView(createDialogButtonsRow(density, "Simpan PIN", dialog::dismiss, () -> {
+            String newPin = etNewOwnerPin.getText().toString().trim();
+            String confirmPin = etConfirmOwnerPin.getText().toString().trim();
+
+            if (newPin.length() != 4) {
+                Toast.makeText(this, "PIN Owner baru harus 4 digit", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (!newPin.equals(confirmPin)) {
+                Toast.makeText(this, "Konfirmasi PIN Owner tidak cocok", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (newPin.equals(currentKasirPin)) {
+                Toast.makeText(this, "PIN Owner tidak boleh sama dengan PIN Kasir", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            dialog.dismiss();
+            JsonObject patchBody = new JsonObject();
+            patchBody.addProperty("owner_pin", newPin);
+
+            SupabaseClient.patch("outlets?id=eq." + sessionManager.getOutletId(), patchBody.toString(), new Callback() {
+                @Override
+                public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                    runOnUiThread(() -> Toast.makeText(ProfileActivity.this, "Gagal ubah PIN Owner", Toast.LENGTH_SHORT).show());
+                }
+
+                @Override
+                public void onResponse(@NonNull Call call, @NonNull Response response) {
+                    runOnUiThread(() -> {
+                        if (response.isSuccessful()) {
+                            currentOwnerPin = newPin;
+                            sessionManager.setOwnerPin(newPin);
+                            Toast.makeText(ProfileActivity.this, "PIN Owner berhasil diperbarui!", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(ProfileActivity.this, "Gagal simpan PIN Owner (" + response.code() + ")", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+            });
+        }));
 
         dialog.show();
     }
@@ -609,15 +1037,18 @@ public class ProfileActivity extends AppCompatActivity {
                 return;
             }
 
-            if (pendingOutletBitmap != null) {
-                sessionManager.saveOutletPhoto(pendingOutletBitmap);
-                loadProfileAvatar();
-            }
-
             JsonObject patchBody = new JsonObject();
             patchBody.addProperty("outlet_name", newName);
             patchBody.addProperty("owner_phone", newPhone);
             patchBody.addProperty("address", newAddr);
+
+            if (pendingOutletBitmap != null) {
+                String encodedAvatar = sessionManager.encodeAndSaveOutletPhoto(pendingOutletBitmap);
+                loadProfileAvatar();
+                if (!encodedAvatar.isEmpty()) {
+                    patchBody.addProperty("avatar_base64", encodedAvatar);
+                }
+            }
 
             SupabaseClient.patch("outlets?id=eq." + sessionManager.getOutletId(), patchBody.toString(), new Callback() {
                 @Override
@@ -635,7 +1066,7 @@ public class ProfileActivity extends AppCompatActivity {
                         tvProfileOutletName.setText(currentOutletName);
                         tvProfileOwnerPhone.setText(currentOwnerPhone);
                         dialog.dismiss();
-                        Toast.makeText(ProfileActivity.this, "Profil outlet diperbarui!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(ProfileActivity.this, "Profil & foto outlet diperbarui!", Toast.LENGTH_SHORT).show();
                     });
                 }
             });
@@ -673,5 +1104,9 @@ public class ProfileActivity extends AppCompatActivity {
 
     private String getStr(JsonObject obj, String key, String fallback) {
         return (obj.has(key) && !obj.get(key).isJsonNull()) ? obj.get(key).getAsString() : fallback;
+    }
+
+    private int getInt(JsonObject obj, String key, int fallback) {
+        return (obj.has(key) && !obj.get(key).isJsonNull()) ? obj.get(key).getAsInt() : fallback;
     }
 }

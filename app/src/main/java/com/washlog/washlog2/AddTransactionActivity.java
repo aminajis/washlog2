@@ -103,6 +103,12 @@ public class AddTransactionActivity extends AppCompatActivity {
 
         sessionManager = new SessionManager(this);
 
+        // Muat langsung konfigurasi tarif & komisi terakhir dari SessionManager
+        commissionPct = sessionManager.getCommissionPct();
+        priceKecil = sessionManager.getPriceSmall();
+        priceSedang = sessionManager.getPriceMedium();
+        priceBesar = sessionManager.getPriceLarge();
+
         cardMotorKecil = findViewById(R.id.cardMotorKecil);
         cardMotorSedang = findViewById(R.id.cardMotorSedang);
         cardMotorBesar = findViewById(R.id.cardMotorBesar);
@@ -148,6 +154,7 @@ public class AddTransactionActivity extends AppCompatActivity {
 
         btnSaveTransaction.setOnClickListener(v -> simpanTransaksi());
 
+        refreshPriceLabels();
         selectCategory("Motor Kecil", priceKecil);
         washerNames.add("Memuat...");
         renderWasherChips();
@@ -158,6 +165,22 @@ public class AddTransactionActivity extends AppCompatActivity {
         super.onResume();
         loadOutletConfig();
         loadActiveWashersAndCounts();
+    }
+
+    private void refreshPriceLabels() {
+        tvPriceMotorKecil.setText(formatRupiah(priceKecil));
+        tvPriceMotorSedang.setText(formatRupiah(priceSedang));
+        tvPriceMotorBesar.setText(formatRupiah(priceBesar));
+    }
+
+    private double getDoubleFromJson(JsonObject obj, String primaryKey, String fallbackKey, double currentVal) {
+        if (obj.has(primaryKey) && !obj.get(primaryKey).isJsonNull() && obj.get(primaryKey).getAsDouble() > 0) {
+            return obj.get(primaryKey).getAsDouble();
+        }
+        if (obj.has(fallbackKey) && !obj.get(fallbackKey).isJsonNull() && obj.get(fallbackKey).getAsDouble() > 0) {
+            return obj.get(fallbackKey).getAsDouble();
+        }
+        return currentVal;
     }
 
     private void loadOutletConfig() {
@@ -179,19 +202,14 @@ public class AddTransactionActivity extends AppCompatActivity {
                         if (obj.has("worker_commission_pct") && !obj.get("worker_commission_pct").isJsonNull()) {
                             commissionPct = obj.get("worker_commission_pct").getAsInt();
                         }
-                        if (obj.has("price_kecil") && !obj.get("price_kecil").isJsonNull() && obj.get("price_kecil").getAsDouble() > 0) {
-                            priceKecil = obj.get("price_kecil").getAsDouble();
-                        }
-                        if (obj.has("price_sedang") && !obj.get("price_sedang").isJsonNull() && obj.get("price_sedang").getAsDouble() > 0) {
-                            priceSedang = obj.get("price_sedang").getAsDouble();
-                        }
-                        if (obj.has("price_besar") && !obj.get("price_besar").isJsonNull() && obj.get("price_besar").getAsDouble() > 0) {
-                            priceBesar = obj.get("price_besar").getAsDouble();
-                        }
+                        priceKecil = getDoubleFromJson(obj, "price_small", "price_kecil", priceKecil);
+                        priceSedang = getDoubleFromJson(obj, "price_medium", "price_sedang", priceSedang);
+                        priceBesar = getDoubleFromJson(obj, "price_large", "price_besar", priceBesar);
 
-                        tvPriceMotorKecil.setText(formatRupiah(priceKecil));
-                        tvPriceMotorSedang.setText(formatRupiah(priceSedang));
-                        tvPriceMotorBesar.setText(formatRupiah(priceBesar));
+                        sessionManager.setCommissionPct(commissionPct);
+                        sessionManager.setMotorPrices((int) priceKecil, (int) priceSedang, (int) priceBesar);
+
+                        refreshPriceLabels();
 
                         if ("Motor Kecil".equals(selectedCategory)) {
                             selectCategory("Motor Kecil", priceKecil);
@@ -400,7 +418,6 @@ public class AddTransactionActivity extends AppCompatActivity {
             cardLp.setMarginEnd(marginEnd);
             card.setLayoutParams(cardLp);
 
-            // Avatar Inisial + Centang Hijau saat Terpilih
             FrameLayout avatarFrame = new FrameLayout(this);
             LinearLayout.LayoutParams frameLp = new LinearLayout.LayoutParams(avatarSize, avatarSize);
             avatarFrame.setLayoutParams(frameLp);

@@ -34,6 +34,7 @@ public class RegisterActivity extends AppCompatActivity {
     private SessionManager sessionManager;
     private EditText etOutletName, etOwnerPhone;
     private EditText etPin1, etPin2, etPin3, etPin4;
+    private EditText etOwnerPin1, etOwnerPin2, etOwnerPin3, etOwnerPin4;
     private LinearLayout cardWorker13, cardWorker46, cardWorkerMore6;
     private TextView tvWorker13Title, tvWorker46Title, tvWorkerMore6Title;
     private CheckBox cbTerms;
@@ -67,10 +68,18 @@ public class RegisterActivity extends AppCompatActivity {
 
         etOutletName = findViewById(R.id.etOutletName);
         etOwnerPhone = findViewById(R.id.etOwnerPhone);
+
+        // 4-Digit PIN Kasir
         etPin1 = findViewById(R.id.etPin1);
         etPin2 = findViewById(R.id.etPin2);
         etPin3 = findViewById(R.id.etPin3);
         etPin4 = findViewById(R.id.etPin4);
+
+        // 4-Digit PIN Owner
+        etOwnerPin1 = findViewById(R.id.etOwnerPin1);
+        etOwnerPin2 = findViewById(R.id.etOwnerPin2);
+        etOwnerPin3 = findViewById(R.id.etOwnerPin3);
+        etOwnerPin4 = findViewById(R.id.etOwnerPin4);
 
         cardWorker13 = findViewById(R.id.cardWorker13);
         cardWorker46 = findViewById(R.id.cardWorker46);
@@ -83,9 +92,15 @@ public class RegisterActivity extends AppCompatActivity {
         btnRegisterSubmit = findViewById(R.id.btnRegisterSubmit);
         pbRegister = findViewById(R.id.pbRegister);
 
+        // Auto-focus PIN Kasir
         setupPinAutoFocus(etPin1, etPin2);
         setupPinAutoFocus(etPin2, etPin3);
         setupPinAutoFocus(etPin3, etPin4);
+
+        // Auto-focus PIN Owner
+        setupPinAutoFocus(etOwnerPin1, etOwnerPin2);
+        setupPinAutoFocus(etOwnerPin2, etOwnerPin3);
+        setupPinAutoFocus(etOwnerPin3, etOwnerPin4);
 
         cardWorker13.setOnClickListener(v -> selectWorkerRange("1 - 3"));
         cardWorker46.setOnClickListener(v -> selectWorkerRange("4 - 6"));
@@ -143,10 +158,16 @@ public class RegisterActivity extends AppCompatActivity {
     private void submitRegistration() {
         String outletName = etOutletName.getText().toString().trim();
         String rawPhone = etOwnerPhone.getText().toString().trim();
-        String pin = etPin1.getText().toString().trim()
+
+        String kasirPin = etPin1.getText().toString().trim()
                 + etPin2.getText().toString().trim()
                 + etPin3.getText().toString().trim()
                 + etPin4.getText().toString().trim();
+
+        String ownerPin = etOwnerPin1.getText().toString().trim()
+                + etOwnerPin2.getText().toString().trim()
+                + etOwnerPin3.getText().toString().trim()
+                + etOwnerPin4.getText().toString().trim();
 
         if (outletName.isEmpty()) {
             Toast.makeText(this, "Nama tempat steam wajib diisi", Toast.LENGTH_SHORT).show();
@@ -156,8 +177,16 @@ public class RegisterActivity extends AppCompatActivity {
             Toast.makeText(this, "Nomor WhatsApp pemilik wajib diisi", Toast.LENGTH_SHORT).show();
             return;
         }
-        if (pin.length() != 4) {
-            Toast.makeText(this, "Lengkapi 4-digit PIN kasir", Toast.LENGTH_SHORT).show();
+        if (kasirPin.length() != 4) {
+            Toast.makeText(this, "Lengkapi 4-digit PIN Kasir", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (ownerPin.length() != 4) {
+            Toast.makeText(this, "Lengkapi 4-digit PIN Owner", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (kasirPin.equals(ownerPin)) {
+            Toast.makeText(this, "PIN Owner tidak boleh sama dengan PIN Kasir", Toast.LENGTH_SHORT).show();
             return;
         }
         if (!cbTerms.isChecked()) {
@@ -170,7 +199,8 @@ public class RegisterActivity extends AppCompatActivity {
         JsonObject payload = new JsonObject();
         payload.addProperty("outlet_name", outletName);
         payload.addProperty("owner_phone", fullPhone);
-        payload.addProperty("kasir_pin", pin);
+        payload.addProperty("kasir_pin", kasirPin);
+        payload.addProperty("owner_pin", ownerPin);
         payload.addProperty("worker_commission_pct", 40);
 
         setLoading(true);

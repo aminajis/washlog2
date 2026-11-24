@@ -75,14 +75,15 @@ public class ExpenseActivity extends AppCompatActivity {
     private Button btnSubmitExpense;
 
     private String selectedCategory = "Bahan Kimia/Sabun";
-    private String currentOutletPin = "";
+    private String currentOwnerPin = "";
+    private String fallbackKasirPin = "";
     private Bitmap pendingReceiptBitmap = null;
     private final OkHttpClient deleteClient = new OkHttpClient();
 
     private final ActivityResultLauncher<String> pickReceiptLauncher =
             registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
                 if (uri != null) {
-                    Bitmap decoded = decodeSampledBitmapFromUri(uri, 600, 600);
+                    Bitmap decoded = decodeSampledBitmapFromUri(uri, 480, 480);
                     if (decoded != null) {
                         pendingReceiptBitmap = decoded;
                         ivReceiptPreview.setImageBitmap(decoded);
@@ -108,6 +109,7 @@ public class ExpenseActivity extends AppCompatActivity {
 
         sessionManager = new SessionManager(this);
         receiptPrefs = getSharedPreferences(PREF_RECEIPTS, MODE_PRIVATE);
+        currentOwnerPin = sessionManager.getOwnerPin();
 
         View topBar = findViewById(R.id.topBarExpense);
         View bottomNav = findViewById(R.id.bottomNavExpense);
@@ -158,6 +160,8 @@ public class ExpenseActivity extends AppCompatActivity {
         SimpleDateFormat dateFmt = new SimpleDateFormat("EEEE, dd MMM yyyy", new Locale("id", "ID"));
         tvExpenseDate.setText(dateFmt.format(new Date()));
 
+        resetReceiptAttachment();
+
         findViewById(R.id.btnBackExpense).setOnClickListener(v -> finish());
         findViewById(R.id.navHomeExp).setOnClickListener(v -> finish());
 
@@ -187,15 +191,15 @@ public class ExpenseActivity extends AppCompatActivity {
 
         btnSubmitExpense.setOnClickListener(v -> addNewExpense());
 
-        fetchOutletPin();
+        fetchOwnerPin();
         loadExpensesFromSupabase();
     }
 
-    private void fetchOutletPin() {
+    private void fetchOwnerPin() {
         String outletId = sessionManager.getOutletId();
         if (outletId.isEmpty()) return;
 
-        SupabaseClient.get("outlets?id=eq." + outletId + "&select=kasir_pin", new Callback() {
+        SupabaseClient.get("outlets?id=eq." + outletId + "&select=owner_pin,kasir_pin", new Callback() {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {}
 
@@ -206,7 +210,13 @@ public class ExpenseActivity extends AppCompatActivity {
                 runOnUiThread(() -> {
                     JsonArray arr = JsonParser.parseString(body).getAsJsonArray();
                     if (!arr.isEmpty()) {
-                        currentOutletPin = getStr(arr.get(0).getAsJsonObject(), "kasir_pin", "");
+                        JsonObject obj = arr.get(0).getAsJsonObject();
+                        String fetchedOwnerPin = getStr(obj, "owner_pin", "");
+                        fallbackKasirPin = getStr(obj, "kasir_pin", "");
+                        if (!fetchedOwnerPin.isEmpty()) {
+                            currentOwnerPin = fetchedOwnerPin;
+                            sessionManager.setOwnerPin(fetchedOwnerPin);
+                        }
                     }
                 });
             }
@@ -245,8 +255,8 @@ public class ExpenseActivity extends AppCompatActivity {
         ivReceiptPreview.setVisibility(View.GONE);
         ivReceiptThumbFallback.setVisibility(View.VISIBLE);
         tvReceiptFileName.setText("Belum ada foto nota");
-        tvReceiptStatus.setText("Opsional • Lampirkan bukti struk");
-        tvReceiptStatus.setTextColor(ContextCompat.getColor(this, R.color.slate_gray));
+        tvReceiptStatus.setText("Wajib • Lampirkan foto bukti nota");
+        tvReceiptStatus.setTextColor(Color.parseColor("#DC2626"));
         tvChangeReceiptLabel.setText("Pilih");
     }
 
@@ -292,19 +302,31 @@ public class ExpenseActivity extends AppCompatActivity {
             if (!rawNominal.isEmpty()) amount = Long.parseLong(rawNominal);
         } catch (NumberFormatException ignored) {}
 
-        if (title.isEmpty() || amount <= 0L) {
-            Toast.makeText(this, "Isi nama & nominal pengeluaran dulu", Toast.LENGTH_SHORT).show();
+        if (title.isEmpty()) {
+            Toast.makeText(this, "Nama/keterangan pengeluaran wajib diisi", Toast.LENGTH_SHORT).show();
             return;
         }
+        if (amount <= 0L) {
+            Toast.makeText(this, "Nominal pengeluaran wajib diisi", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (pendingReceiptBitmap == null) {
+            Toast.makeText(this, "Foto bukti nota wajib dilampirkan!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        final Bitmap receiptToSave = pendingReceiptBitmap;
+        final String encodedReceipt = encodeBitmapToBase64(receiptToSave);
+        final long finalAmount = amount;
 
         JsonObject payload = new JsonObject();
         payload.addProperty("outlet_id", outletId);
         payload.addProperty("title", title);
         payload.addProperty("amount", amount);
         payload.addProperty("category", selectedCategory);
-
-        final Bitmap receiptToSave = pendingReceiptBitmap;
-        final long finalAmount = amount;
+        if (!encodedReceipt.isEmpty()) {
+            payload.addProperty("receipt_url", encodedReceipt);
+        }
 
         pbExpense.setVisibility(View.VISIBLE);
         btnSubmitExpense.setEnabled(false);
@@ -326,14 +348,13 @@ public class ExpenseActivity extends AppCompatActivity {
                     pbExpense.setVisibility(View.GONE);
                     btnSubmitExpense.setEnabled(true);
                     if (response.isSuccessful()) {
-                        if (receiptToSave != null) {
-                            String todayKey = new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new Date());
-                            saveReceiptBitmap(buildReceiptLookupKey(outletId, todayKey, title, finalAmount), receiptToSave);
-                        }
+                        String todayKey = new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(new Date());
+                        saveReceiptBitmap(buildReceiptLookupKey(outletId, todayKey, title, finalAmount), receiptToSave);
+
                         etExpenseName.setText("");
                         etExpenseNominal.setText("");
                         resetReceiptAttachment();
-                        Toast.makeText(ExpenseActivity.this, "Pengeluaran tersimpan!", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(ExpenseActivity.this, "Pengeluaran & bukti nota tersimpan!", Toast.LENGTH_SHORT).show();
                         loadExpensesFromSupabase();
                     } else {
                         new AlertDialog.Builder(ExpenseActivity.this)
@@ -347,8 +368,13 @@ public class ExpenseActivity extends AppCompatActivity {
         });
     }
 
-    private void verifyPinAndRun(String actionTitle, Runnable onAuthorized) {
-        if (currentOutletPin == null || currentOutletPin.isEmpty()) {
+    private void verifyOwnerPinAndRun(String actionTitle, Runnable onAuthorized) {
+        String expectedPin = !currentOwnerPin.isEmpty() ? currentOwnerPin : sessionManager.getOwnerPin();
+        if (expectedPin.isEmpty()) {
+            expectedPin = fallbackKasirPin;
+        }
+
+        if (expectedPin == null || expectedPin.isEmpty()) {
             new AlertDialog.Builder(this)
                     .setTitle(actionTitle)
                     .setMessage("Lanjutkan perubahan data pengeluaran ini?")
@@ -358,6 +384,7 @@ public class ExpenseActivity extends AppCompatActivity {
             return;
         }
 
+        final String targetPin = expectedPin;
         float density = getResources().getDisplayMetrics().density;
         int pad = (int) (18 * density);
 
@@ -367,14 +394,14 @@ public class ExpenseActivity extends AppCompatActivity {
         container.setBackgroundResource(R.drawable.bg_dialog_white);
 
         TextView tvTitle = new TextView(this);
-        tvTitle.setText("Otorisasi PIN Keamanan");
+        tvTitle.setText("🔐 Verifikasi PIN Owner");
         tvTitle.setTextColor(ContextCompat.getColor(this, R.color.deep_slate_navy));
         tvTitle.setTextSize(15f);
         tvTitle.setTypeface(null, Typeface.BOLD);
         container.addView(tvTitle);
 
         TextView tvDesc = new TextView(this);
-        tvDesc.setText("Masukkan 4-digit PIN untuk " + actionTitle.toLowerCase(Locale.ROOT) + " catatan pengeluaran.");
+        tvDesc.setText("Masukkan 4-digit PIN Owner untuk " + actionTitle.toLowerCase(Locale.ROOT) + " catatan pengeluaran.");
         tvDesc.setTextColor(ContextCompat.getColor(this, R.color.slate_gray));
         tvDesc.setTextSize(11.5f);
         LinearLayout.LayoutParams descLp = new LinearLayout.LayoutParams(
@@ -391,6 +418,7 @@ public class ExpenseActivity extends AppCompatActivity {
         etPin.setTextSize(18f);
         etPin.setTypeface(null, Typeface.BOLD);
         etPin.setBackgroundResource(R.drawable.bg_input_field);
+        etPin.setTextColor(ContextCompat.getColor(this, R.color.deep_slate_navy));
         LinearLayout.LayoutParams pinLp = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, (int) (48 * density));
         pinLp.topMargin = (int) (12 * density);
@@ -403,7 +431,7 @@ public class ExpenseActivity extends AppCompatActivity {
         }
 
         TextView btnVerify = new TextView(this);
-        btnVerify.setText("Verifikasi & Lanjutkan");
+        btnVerify.setText("Verifikasi PIN Owner");
         btnVerify.setTextColor(Color.WHITE);
         btnVerify.setTextSize(13f);
         btnVerify.setTypeface(null, Typeface.BOLD);
@@ -415,11 +443,11 @@ public class ExpenseActivity extends AppCompatActivity {
         btnVerify.setLayoutParams(btnLp);
         btnVerify.setOnClickListener(v -> {
             String entered = etPin.getText().toString().trim();
-            if (entered.equals(currentOutletPin)) {
+            if (entered.equals(targetPin)) {
                 dialog.dismiss();
                 onAuthorized.run();
             } else {
-                Toast.makeText(this, "PIN salah! Akses perubahan ditolak.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "PIN Owner salah! Akses ditolak.", Toast.LENGTH_SHORT).show();
             }
         });
         container.addView(btnVerify);
@@ -582,6 +610,7 @@ public class ExpenseActivity extends AppCompatActivity {
             String category = getStr(item, "category", "Bahan Kimia/Sabun");
             String time = extractLocalTime(item);
             String picName = getStr(item, "pic_name", "Kasir");
+            String remoteReceiptUrl = getStr(item, "receipt_url", "");
 
             totalDaily += amount;
 
@@ -602,20 +631,25 @@ public class ExpenseActivity extends AppCompatActivity {
             tvExpCategory.setText(category);
 
             String lookupKey = buildReceiptLookupKey(outletId, itemDateKey, title, amount);
-            Bitmap savedReceipt = getReceiptBitmap(lookupKey);
+            Bitmap savedReceipt = decodeBase64ToBitmap(remoteReceiptUrl);
+            if (savedReceipt == null) {
+                savedReceipt = getReceiptBitmap(lookupKey);
+            }
+
             if (savedReceipt != null) {
+                final Bitmap finalReceipt = savedReceipt;
                 tvExpViewReceipt.setVisibility(View.VISIBLE);
-                tvExpViewReceipt.setOnClickListener(v -> showReceiptPreviewDialog(savedReceipt, title));
+                tvExpViewReceipt.setOnClickListener(v -> showReceiptPreviewDialog(finalReceipt, title));
             } else {
                 tvExpViewReceipt.setVisibility(View.GONE);
             }
 
             btnEditExp.setOnClickListener(v ->
-                    verifyPinAndRun("Edit Pengeluaran", () ->
+                    verifyOwnerPinAndRun("Edit Pengeluaran", () ->
                             showEditExpenseDialog(id, lookupKey, title, amount, category, itemDateKey)));
 
             btnDeleteExp.setOnClickListener(v ->
-                    verifyPinAndRun("Hapus Pengeluaran", () ->
+                    verifyOwnerPinAndRun("Hapus Pengeluaran", () ->
                             deleteExpenseFromSupabase(id, lookupKey, title)));
 
             llExpenseList.addView(card);
@@ -690,46 +724,35 @@ public class ExpenseActivity extends AppCompatActivity {
         return outletId + "_" + dateKey + "_" + title.trim().toLowerCase(Locale.ROOT) + "_" + amount;
     }
 
-    private void saveReceiptBitmap(String key, Bitmap bitmap) {
-        if (bitmap == null) return;
+    private String encodeBitmapToBase64(Bitmap bitmap) {
+        if (bitmap == null) return "";
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 80, baos);
-        String encoded = Base64.encodeToString(baos.toByteArray(), Base64.NO_WRAP);
-        receiptPrefs.edit().putString(key, encoded).apply();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 72, baos);
+        return Base64.encodeToString(baos.toByteArray(), Base64.NO_WRAP);
     }
 
-    private Bitmap getReceiptBitmap(String key) {
-        String encoded = receiptPrefs.getString(key, "");
-        if (encoded == null || encoded.isEmpty()) return null;
+    private Bitmap decodeBase64ToBitmap(String encoded) {
+        if (encoded == null || encoded.trim().isEmpty()) return null;
         try {
-            byte[] bytes = Base64.decode(encoded, Base64.DEFAULT);
+            String clean = encoded.contains(",") ? encoded.substring(encoded.indexOf(",") + 1) : encoded;
+            byte[] bytes = Base64.decode(clean.trim(), Base64.DEFAULT);
             return BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
         } catch (Exception e) {
             return null;
         }
     }
 
-    private String resolveFileName(Uri uri) {
-        String result = null;
-        if ("content".equals(uri.getScheme())) {
-            try (Cursor cursor = getContentResolver().query(uri, null, null, null, null)) {
-                if (cursor != null && cursor.moveToFirst()) {
-                    int idx = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
-                    if (idx >= 0) result = cursor.getString(idx);
-                }
-            } catch (Exception ignored) {}
+    private void saveReceiptBitmap(String key, Bitmap bitmap) {
+        if (bitmap == null) return;
+        String encoded = encodeBitmapToBase64(bitmap);
+        if (!encoded.isEmpty()) {
+            receiptPrefs.edit().putString(key, encoded).apply();
         }
-        if (result == null) {
-            String path = uri.getLastPathSegment();
-            result = (path != null && !path.isEmpty()) ? path : "nota_belanja.jpg";
-        }
-        return result;
     }
 
-    private int estimateCompressedKb(Bitmap bitmap) {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 80, baos);
-        return Math.max(1, baos.size() / 1024);
+    private Bitmap getReceiptBitmap(String key) {
+        String encoded = receiptPrefs.getString(key, "");
+        return decodeBase64ToBitmap(encoded);
     }
 
     private Bitmap decodeSampledBitmapFromUri(Uri uri, int reqWidth, int reqHeight) {
@@ -759,38 +782,66 @@ public class ExpenseActivity extends AppCompatActivity {
         }
     }
 
-    private String extractLocalDateKey(JsonObject obj) {
-        String dateCol = getStr(obj, "date", "");
-        if (dateCol.length() >= 10) {
-            return dateCol.substring(0, 10);
-        }
-        String createdAt = getStr(obj, "created_at", "");
-        if (createdAt.length() >= 19) {
-            try {
-                SimpleDateFormat isoUtc = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US);
-                isoUtc.setTimeZone(TimeZone.getTimeZone("UTC"));
-                Date parsed = isoUtc.parse(createdAt.substring(0, 19));
-                if (parsed != null) {
-                    return new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(parsed);
+    private String resolveFileName(Uri uri) {
+        String result = "bukti_nota.jpg";
+        if ("content".equals(uri.getScheme())) {
+            try (Cursor cursor = getContentResolver().query(uri, null, null, null, null)) {
+                if (cursor != null && cursor.moveToFirst()) {
+                    int idx = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+                    if (idx != -1) {
+                        result = cursor.getString(idx);
+                    }
                 }
             } catch (Exception ignored) {}
         }
-        return createdAt.length() >= 10 ? createdAt.substring(0, 10) : "";
+        return result;
+    }
+
+    private int estimateCompressedKb(Bitmap bitmap) {
+        if (bitmap == null) return 0;
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 72, baos);
+        return Math.max(1, baos.size() / 1024);
+    }
+
+    private String extractLocalDateKey(JsonObject obj) {
+        if (obj.has("date") && !obj.get("date").isJsonNull()) {
+            String d = obj.get("date").getAsString();
+            if (d.length() >= 10) return d.substring(0, 10);
+        }
+        if (obj.has("created_at") && !obj.get("created_at").isJsonNull()) {
+            String createdAt = obj.get("created_at").getAsString();
+            if (createdAt.length() >= 19) {
+                try {
+                    SimpleDateFormat isoUtc = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US);
+                    isoUtc.setTimeZone(TimeZone.getTimeZone("UTC"));
+                    Date parsed = isoUtc.parse(createdAt.substring(0, 19));
+                    if (parsed != null) {
+                        return new SimpleDateFormat("yyyy-MM-dd", Locale.US).format(parsed);
+                    }
+                } catch (Exception ignored) {}
+            }
+            if (createdAt.length() >= 10) return createdAt.substring(0, 10);
+        }
+        return "";
     }
 
     private String extractLocalTime(JsonObject obj) {
-        String createdAt = getStr(obj, "created_at", "");
-        if (createdAt.length() >= 19) {
-            try {
-                SimpleDateFormat isoUtc = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US);
-                isoUtc.setTimeZone(TimeZone.getTimeZone("UTC"));
-                Date parsed = isoUtc.parse(createdAt.substring(0, 19));
-                if (parsed != null) {
-                    return new SimpleDateFormat("HH:mm", Locale.getDefault()).format(parsed);
-                }
-            } catch (Exception ignored) {}
+        if (obj.has("created_at") && !obj.get("created_at").isJsonNull()) {
+            String createdAt = obj.get("created_at").getAsString();
+            if (createdAt.length() >= 19) {
+                try {
+                    SimpleDateFormat isoUtc = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US);
+                    isoUtc.setTimeZone(TimeZone.getTimeZone("UTC"));
+                    Date parsed = isoUtc.parse(createdAt.substring(0, 19));
+                    if (parsed != null) {
+                        return new SimpleDateFormat("HH:mm", Locale.getDefault()).format(parsed);
+                    }
+                } catch (Exception ignored) {}
+            }
+            if (createdAt.length() >= 16) return createdAt.substring(11, 16);
         }
-        return "Hari ini";
+        return "00:00";
     }
 
     private String formatRupiahId(long amount) {

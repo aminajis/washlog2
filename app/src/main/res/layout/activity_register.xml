@@ -69,7 +69,6 @@
                 </LinearLayout>
 
                 <!-- Logo Square Kanan Atas + Centang -->
-                <!-- Logo Square Kanan Atas + Centang -->
                 <FrameLayout
                     android:layout_width="56dp"
                     android:layout_height="56dp">
@@ -326,7 +325,7 @@
             android:textColor="@color/slate_gray"
             android:textSize="11sp" />
 
-        <!-- 4. BUAT 4-DIGIT PIN -->
+        <!-- 4A. BUAT 4-DIGIT PIN KASIR -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -346,7 +345,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="🔢  Buat 4-Digit PIN"
+                    android:text="🔢  Buat 4-Digit PIN Kasir"
                     android:textColor="@color/deep_slate_navy"
                     android:textSize="13sp"
                     android:textStyle="bold" />
@@ -357,13 +356,13 @@
                     android:background="@drawable/bg_pill_indigo"
                     android:paddingHorizontal="9dp"
                     android:paddingVertical="3dp"
-                    android:text="Keamanan"
+                    android:text="Akses Kasir"
                     android:textColor="@color/royal_blue"
                     android:textSize="10sp"
                     android:textStyle="bold" />
             </LinearLayout>
 
-            <!-- 4 Kotak Input PIN -->
+            <!-- 4 Kotak Input PIN Kasir -->
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -427,7 +426,115 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:text="🔒 Dapat diubah kapan saja di menu Pengaturan Kasir"
+                android:gravity="center"
+                android:text="Dipakai kasir untuk login dan mencatat transaksi harian"
+                android:textColor="@color/slate_gray"
+                android:textSize="11sp" />
+        </LinearLayout>
+
+        <!-- 4B. BUAT 4-DIGIT PIN OWNER -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/bg_card_14"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:padding="14dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="🔐  Buat 4-Digit PIN Owner"
+                    android:textColor="@color/deep_slate_navy"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_badge_green"
+                    android:paddingHorizontal="9dp"
+                    android:paddingVertical="3dp"
+                    android:text="Khusus Pemilik"
+                    android:textColor="@color/emerald_green"
+                    android:textSize="10sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <!-- 4 Kotak Input PIN Owner -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <EditText
+                    android:id="@+id/etOwnerPin1"
+                    android:layout_width="48dp"
+                    android:layout_height="54dp"
+                    android:background="@drawable/bg_banner_blue"
+                    android:gravity="center"
+                    android:inputType="numberPassword"
+                    android:maxLength="1"
+                    android:textColor="@color/deep_slate_navy"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <EditText
+                    android:id="@+id/etOwnerPin2"
+                    android:layout_width="48dp"
+                    android:layout_height="54dp"
+                    android:layout_marginStart="10dp"
+                    android:background="@drawable/bg_banner_blue"
+                    android:gravity="center"
+                    android:inputType="numberPassword"
+                    android:maxLength="1"
+                    android:textColor="@color/deep_slate_navy"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <EditText
+                    android:id="@+id/etOwnerPin3"
+                    android:layout_width="48dp"
+                    android:layout_height="54dp"
+                    android:layout_marginStart="10dp"
+                    android:background="@drawable/bg_banner_blue"
+                    android:gravity="center"
+                    android:inputType="numberPassword"
+                    android:maxLength="1"
+                    android:textColor="@color/deep_slate_navy"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <EditText
+                    android:id="@+id/etOwnerPin4"
+                    android:layout_width="48dp"
+                    android:layout_height="54dp"
+                    android:layout_marginStart="10dp"
+                    android:background="@drawable/bg_banner_blue"
+                    android:gravity="center"
+                    android:inputType="numberPassword"
+                    android:maxLength="1"
+                    android:textColor="@color/deep_slate_navy"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:gravity="center"
+                android:text="Mengunci edit/hapus pengeluaran, ubah tarif, dan pengaturan penting"
                 android:textColor="@color/slate_gray"
                 android:textSize="11sp" />
         </LinearLayout>

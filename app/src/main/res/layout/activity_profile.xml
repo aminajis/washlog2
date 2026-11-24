@@ -62,7 +62,7 @@
             android:paddingTop="14dp"
             android:paddingBottom="24dp">
 
-            <!-- 1. KARTU PROFIL OUTLET (PERSIS FIGMA) -->
+            <!-- 1. KARTU PROFIL OUTLET -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -224,7 +224,7 @@
                     </LinearLayout>
                 </LinearLayout>
 
-                <!-- 2 Tombol Aksi Sejajar: Ubah PIN Kasir & Edit Profil Outlet -->
+                <!-- Baris Tombol PIN: Ubah PIN Kasir & Ubah PIN Owner -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -245,7 +245,7 @@
                         <ImageView
                             android:layout_width="14dp"
                             android:layout_height="14dp"
-                            android:contentDescription="PIN"
+                            android:contentDescription="PIN Kasir"
                             android:src="@drawable/ic_prof_lock"
                             app:tint="@color/royal_blue" />
 
@@ -260,7 +260,7 @@
                     </LinearLayout>
 
                     <LinearLayout
-                        android:id="@+id/btnOpenEditProfile"
+                        android:id="@+id/btnOpenChangeOwnerPin"
                         android:layout_width="0dp"
                         android:layout_height="40dp"
                         android:layout_marginStart="6dp"
@@ -273,19 +273,47 @@
                         <ImageView
                             android:layout_width="14dp"
                             android:layout_height="14dp"
-                            android:contentDescription="Edit"
-                            android:src="@drawable/ic_prof_store"
-                            app:tint="@color/deep_slate_navy" />
+                            android:contentDescription="PIN Owner"
+                            android:src="@drawable/ic_prof_lock"
+                            app:tint="@color/emerald_green" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="6dp"
-                            android:text="Edit Profil Outlet"
+                            android:text="Ubah PIN Owner"
                             android:textColor="@color/deep_slate_navy"
                             android:textSize="11.5sp"
                             android:textStyle="bold" />
                     </LinearLayout>
+                </LinearLayout>
+
+                <!-- Tombol Edit Profil & Foto Outlet -->
+                <LinearLayout
+                    android:id="@+id/btnOpenEditProfile"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/bg_input_field"
+                    android:gravity="center"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="12dp">
+
+                    <ImageView
+                        android:layout_width="14dp"
+                        android:layout_height="14dp"
+                        android:contentDescription="Edit"
+                        android:src="@drawable/ic_prof_store"
+                        app:tint="@color/deep_slate_navy" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:text="Edit Profil &amp; Foto Outlet (PIN Owner)"
+                        android:textColor="@color/deep_slate_navy"
+                        android:textSize="11.5sp"
+                        android:textStyle="bold" />
                 </LinearLayout>
             </LinearLayout>
 
@@ -399,7 +427,7 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- 3. KARTU PREFERENSI SISTEM (PENGATURAN KOMISI DEFAULT) -->
+            <!-- 3. KARTU PREFERENSI SISTEM (KOMISI & TARIF MOTOR) -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -422,15 +450,43 @@
                         app:tint="@color/royal_blue" />
 
                     <TextView
-                        android:layout_width="wrap_content"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
+                        android:layout_weight="1"
                         android:text="Preferensi Sistem"
                         android:textColor="@color/deep_slate_navy"
                         android:textSize="14.5sp"
                         android:textStyle="bold" />
+
+                    <LinearLayout
+                        android:id="@+id/btnEditSystemPrefs"
+                        android:layout_width="wrap_content"
+                        android:layout_height="30dp"
+                        android:background="@drawable/bg_pill_blue"
+                        android:gravity="center"
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="10dp">
+
+                        <ImageView
+                            android:layout_width="12dp"
+                            android:layout_height="12dp"
+                            android:contentDescription="Ubah"
+                            android:src="@drawable/ic_prof_lock"
+                            app:tint="@color/royal_blue" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="5dp"
+                            android:text="Ubah Komisi &amp; Tarif"
+                            android:textColor="@color/royal_blue"
+                            android:textSize="10.5sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
                 </LinearLayout>
 
+                <!-- Sub-box 1: Pengaturan Komisi Default -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -540,9 +596,120 @@
                         </LinearLayout>
                     </LinearLayout>
                 </LinearLayout>
+
+                <!-- Sub-box 2: Tarif Cuci Motor -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:background="@drawable/bg_input_field"
+                    android:orientation="vertical"
+                    android:padding="12dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Tarif Cuci Motor"
+                        android:textColor="@color/slate_gray"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:orientation="horizontal">
+
+                        <!-- Motor Kecil -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="6dp"
+                            android:layout_weight="1"
+                            android:background="@drawable/bg_card_white"
+                            android:gravity="center"
+                            android:orientation="vertical"
+                            android:paddingVertical="10dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Motor Kecil"
+                                android:textColor="@color/slate_gray"
+                                android:textSize="10sp" />
+
+                            <TextView
+                                android:id="@+id/tvPrefPriceSmall"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:text="Rp 15.000"
+                                android:textColor="@color/deep_slate_navy"
+                                android:textSize="12.5sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <!-- Motor Sedang -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="6dp"
+                            android:layout_weight="1"
+                            android:background="@drawable/bg_card_white"
+                            android:gravity="center"
+                            android:orientation="vertical"
+                            android:paddingVertical="10dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Motor Sedang"
+                                android:textColor="@color/slate_gray"
+                                android:textSize="10sp" />
+
+                            <TextView
+                                android:id="@+id/tvPrefPriceMedium"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:text="Rp 20.000"
+                                android:textColor="@color/deep_slate_navy"
+                                android:textSize="12.5sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <!-- Motor Besar -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:background="@drawable/bg_card_white"
+                            android:gravity="center"
+                            android:orientation="vertical"
+                            android:paddingVertical="10dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Motor Besar"
+                                android:textColor="@color/slate_gray"
+                                android:textSize="10sp" />
+
+                            <TextView
+                                android:id="@+id/tvPrefPriceLarge"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:text="Rp 25.000"
+                                android:textColor="@color/emerald_green"
+                                android:textSize="12.5sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
             </LinearLayout>
 
-            <!-- 4. TOMBOL KELUAR (OUTLINE MERAH PERSIS FIGMA) -->
+            <!-- 4. TOMBOL KELUAR -->
             <LinearLayout
                 android:id="@+id/btnLogoutShift"
                 android:layout_width="match_parent"
